@@ -2,18 +2,18 @@ package com.aihoo.digital.dto;
 
 import java.util.List;
 
-public class ObjectDetectResponse {
-    private String taskId;
+public class ComicQueryResponse {
+    private String requestId;
     private String status;
     private List<String> imageUrls;
     private String error;
 
-    public String getTaskId() {
-        return taskId;
+    public String getRequestId() {
+        return requestId;
     }
 
-    public void setTaskId(String taskId) {
-        this.taskId = taskId;
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
     }
 
     public String getStatus() {

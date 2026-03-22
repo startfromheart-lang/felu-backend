@@ -3,6 +3,8 @@ package com.aihoo.digital.service.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -27,24 +29,23 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.volcengine.service.visual.IVisualService;
 import com.volcengine.service.visual.impl.VisualServiceImpl;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class DigitalHumanVideoServiceImpl implements DigitalHumanVideoService {
+
+    private static final Logger log = LoggerFactory.getLogger(DigitalHumanVideoServiceImpl.class);
 
     private final DigitalHumanVideoMapper videoMapper;
     private final WebClient.Builder webClientBuilder;
 
+    public DigitalHumanVideoServiceImpl(DigitalHumanVideoMapper videoMapper, WebClient.Builder webClientBuilder) {
+        this.videoMapper = videoMapper;
+        this.webClientBuilder = webClientBuilder;
+    }
 
     private RecognizeQueryResponse getRecognizeResultInternal(String taskId) {
         IVisualService visualService = VisualServiceImpl.getInstance();
-        // call below method if you dont set ak and sk in ～/.vcloud/config
 
         JSONObject req = new JSONObject();
-        //请求Body(查看接口文档请求参数-请求示例，将请求参数内容复制到此)
         req.put("req_key","jimeng_realman_avatar_picture_create_role_omni_v15");
         req.put("task_id", taskId);
 
@@ -54,7 +55,6 @@ public class DigitalHumanVideoServiceImpl implements DigitalHumanVideoService {
             Object apiResponse = visualService.cvGetResult(req);
             System.out.println(JSON.toJSONString(apiResponse));
 
-            // 解析响应，提取状态和视频 URL
             JSONObject jsonResponse = JSON.parseObject(JSON.toJSONString(apiResponse));
             Integer code = jsonResponse.getInteger("code");
 
@@ -66,7 +66,6 @@ public class DigitalHumanVideoServiceImpl implements DigitalHumanVideoService {
 
                     response.setStatus(status);
 
-                    // 如果 status 为 done，则解析 resp_data 中的 status
                     if ("done".equals(status)) {
                         String respDataStr = data.getString("resp_data");
                         if (respDataStr != null && !respDataStr.isEmpty()) {
@@ -93,19 +92,10 @@ public class DigitalHumanVideoServiceImpl implements DigitalHumanVideoService {
         }
     }
 
-
-
-
-
-
-
-
     private VideoQueryResponse getVideoUrlInternal(String taskId) {
         IVisualService visualService = VisualServiceImpl.getInstance();
-        // call below method if you dont set ak and sk in ～/.vcloud/config
 
         JSONObject req = new JSONObject();
-        //请求Body(查看接口文档请求参数-请求示例，将请求参数内容复制到此)
         req.put("req_key","jimeng_realman_avatar_picture_omni_v15");
         req.put("task_id", taskId);
 
@@ -115,7 +105,6 @@ public class DigitalHumanVideoServiceImpl implements DigitalHumanVideoService {
             Object apiResponse = visualService.cvGetResult(req);
             System.out.println(JSON.toJSONString(apiResponse));
 
-            // 解析响应，提取状态和视频 URL
             JSONObject jsonResponse = JSON.parseObject(JSON.toJSONString(apiResponse));
             Integer code = jsonResponse.getInteger("code");
 
@@ -143,15 +132,6 @@ public class DigitalHumanVideoServiceImpl implements DigitalHumanVideoService {
             return response;
         }
     }
-
-
-
-
-
-
-
-
-
 
     @Override
     public DigitalHumanVideo getVideoDetail(String id) {
@@ -242,7 +222,6 @@ public class DigitalHumanVideoServiceImpl implements DigitalHumanVideoService {
                     response.setTaskId(taskId);
                     response.setStatus("processing");
 
-                    // 模拟返回图片URL列表（实际应该从API响应中获取）
                     List<String> imageUrls = new ArrayList<>();
                     imageUrls.add(request.getImageUrl());
                     response.setImageUrls(imageUrls);
@@ -310,139 +289,126 @@ public class DigitalHumanVideoServiceImpl implements DigitalHumanVideoService {
         return getVideoUrlInternal(taskId);
     }
 
+    @Override
+    public VideoGenerateResponse doGenerateVideo(VideoGenerateRequest request) {
+        String imageUrl = "https://static.heouai.com/founder-zhou-zhizhang.png";
+        String audioUrl = "https://static.heouai.com/voice.m4a";
 
+        VideoGenerateResponse response = new VideoGenerateResponse();
 
+        try {
+            ObjectRecognizeRequest recognizeRequest = new ObjectRecognizeRequest();
+            recognizeRequest.setImageUrl(imageUrl);
+            ObjectRecognizeResponse recognizeResponse = objectRecognize(recognizeRequest);
 
+            if (recognizeResponse == null || "failed".equals(recognizeResponse.getStatus())) {
+                log.error("Object recognize failed: {}", recognizeResponse != null ? recognizeResponse.getError() : "null response");
+                response.setStatus("failed");
+                response.setError("Object recognize failed");
+                return response;
+            }
 
+            String recognizeTaskId = recognizeResponse.getTaskId();
+            log.info("Object recognize task_id: {}", recognizeTaskId);
 
+            int maxRetries = 10;
+            int retryCount = 0;
+            RecognizeQueryResult recognizeResult = null;
 
+            while (retryCount < maxRetries) {
+                try {
+                    Thread.sleep(60000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
 
-	@Override
-	public VideoGenerateResponse doGenerateVideo(VideoGenerateRequest request) {
-		// 使用默认图片URL，实际应该从request中获取或从数据库查询
-		String imageUrl = "https://static.heouai.com/founder-zhou-zhizhang.png";
-		String audioUrl = "https://static.heouai.com/voice.m4a";
+                RecognizeQueryResponse queryResponse = getRecognizeResult(recognizeTaskId);
 
-		VideoGenerateResponse response = new VideoGenerateResponse();
+                if (queryResponse != null && "done".equals(queryResponse.getStatus())) {
+                    recognizeResult = new RecognizeQueryResult();
+                    recognizeResult.setStatus(queryResponse.getStatus());
+                    recognizeResult.setRespDataStatus(queryResponse.getRespDataStatus());
+                    log.info("Object recognize completed, resp_data status: {}", queryResponse.getRespDataStatus());
+                    break;
+                } else if (queryResponse != null) {
+                    log.info("Object recognize status: {}", queryResponse.getStatus());
+                }
 
-		try {
-			// 1. 调用objectRecognize进行主体识别
-			ObjectRecognizeRequest recognizeRequest = new ObjectRecognizeRequest();
-			recognizeRequest.setImageUrl(imageUrl);
-			ObjectRecognizeResponse recognizeResponse = objectRecognize(recognizeRequest);
+                retryCount++;
+            }
 
-			if (recognizeResponse == null || "failed".equals(recognizeResponse.getStatus())) {
-				log.error("Object recognize failed: {}", recognizeResponse != null ? recognizeResponse.getError() : "null response");
-				response.setStatus("failed");
-				response.setError("Object recognize failed");
-				return response;
-			}
+            if (recognizeResult == null || !"done".equals(recognizeResult.getStatus())) {
+                log.error("Object recognize timeout or failed after {} retries", maxRetries);
+                response.setStatus("failed");
+                response.setError("Object recognize timeout");
+                return response;
+            }
 
-			String recognizeTaskId = recognizeResponse.getTaskId();
-			log.info("Object recognize task_id: {}", recognizeTaskId);
+            ObjectDetectRequest detectRequest = new ObjectDetectRequest();
+            detectRequest.setImageUrl(imageUrl);
+            ObjectDetectResponse detectResponse = objectDetect(detectRequest);
 
-			// 2. 轮询等待识别结果
-			int maxRetries = 10;
-			int retryCount = 0;
-			RecognizeQueryResult recognizeResult = null;
+            if (detectResponse == null || "failed".equals(detectResponse.getStatus())) {
+                log.error("Object detect failed: {}", detectResponse != null ? detectResponse.getError() : "null response");
+                response.setStatus("failed");
+                response.setError("Object detect failed");
+                return response;
+            }
 
-			while (retryCount < maxRetries) {
-				try {
-					Thread.sleep(60000); // 等待1分钟
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-					break;
-				}
+            String detectTaskId = detectResponse.getTaskId();
+            log.info("Object detect task_id: {}", detectTaskId);
 
-				RecognizeQueryResponse queryResponse = getRecognizeResult(recognizeTaskId);
+            GenerateVideoRequest generateRequest = new GenerateVideoRequest();
+            generateRequest.setImageUrl(imageUrl);
+            generateRequest.setAudioUrl(audioUrl);
+            generateRequest.setVoiceType(request.getVoiceType());
+            GenerateVideoResponse generateResponse = generateVideo(generateRequest);
 
-				if (queryResponse != null && "done".equals(queryResponse.getStatus())) {
-					recognizeResult = new RecognizeQueryResult();
-					recognizeResult.setStatus(queryResponse.getStatus());
-					recognizeResult.setRespDataStatus(queryResponse.getRespDataStatus());
-					log.info("Object recognize completed, resp_data status: {}", queryResponse.getRespDataStatus());
-					break;
-				} else if (queryResponse != null) {
-					log.info("Object recognize status: {}", queryResponse.getStatus());
-				}
+            if (generateResponse == null || "failed".equals(generateResponse.getStatus())) {
+                log.error("Generate video failed: {}", generateResponse != null ? generateResponse.getError() : "null response");
+                response.setStatus("failed");
+                response.setError("Generate video failed");
+                return response;
+            }
 
-				retryCount++;
-			}
+            String generateTaskId = generateResponse.getTaskId();
+            log.info("Generate video task_id: {}", generateTaskId);
 
-			if (recognizeResult == null || !"done".equals(recognizeResult.getStatus())) {
-				log.error("Object recognize timeout or failed after {} retries", maxRetries);
-				response.setStatus("failed");
-				response.setError("Object recognize timeout");
-				return response;
-			}
+            retryCount = 0;
+            VideoQueryResponse videoQueryResponse = null;
 
-			// 3. 调用objectDetect进行客体检测
-			ObjectDetectRequest detectRequest = new ObjectDetectRequest();
-			detectRequest.setImageUrl(imageUrl);
-			ObjectDetectResponse detectResponse = objectDetect(detectRequest);
+            while (retryCount < maxRetries) {
+                try {
+                    Thread.sleep(60000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
 
-			if (detectResponse == null || "failed".equals(detectResponse.getStatus())) {
-				log.error("Object detect failed: {}", detectResponse != null ? detectResponse.getError() : "null response");
-				response.setStatus("failed");
-				response.setError("Object detect failed");
-				return response;
-			}
+                videoQueryResponse = getVideoUrl(generateTaskId);
 
-			String detectTaskId = detectResponse.getTaskId();
-			log.info("Object detect task_id: {}", detectTaskId);
+                if (videoQueryResponse != null && "done".equals(videoQueryResponse.getStatus())) {
+                    log.info("Video generation completed, video_url: {}", videoQueryResponse.getVideoUrl());
+                    response.setStatus("completed");
+                    response.setVideoUrl(videoQueryResponse.getVideoUrl());
+                    return response;
+                } else if (videoQueryResponse != null) {
+                    log.info("Video generation status: {}", videoQueryResponse.getStatus());
+                }
 
-			// 4. 生成视频
-			GenerateVideoRequest generateRequest = new GenerateVideoRequest();
-			generateRequest.setImageUrl(imageUrl);
-			generateRequest.setAudioUrl(audioUrl);
-			generateRequest.setVoiceType(request.getVoiceType());
-			GenerateVideoResponse generateResponse = generateVideo(generateRequest);
+                retryCount++;
+            }
 
-			if (generateResponse == null || "failed".equals(generateResponse.getStatus())) {
-				log.error("Generate video failed: {}", generateResponse != null ? generateResponse.getError() : "null response");
-				response.setStatus("failed");
-				response.setError("Generate video failed");
-				return response;
-			}
-
-			String generateTaskId = generateResponse.getTaskId();
-			log.info("Generate video task_id: {}", generateTaskId);
-
-			// 5. 轮询等待视频生成结果
-			retryCount = 0;
-			VideoQueryResponse videoQueryResponse = null;
-
-			while (retryCount < maxRetries) {
-				try {
-					Thread.sleep(60000); // 等待1分钟
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-					break;
-				}
-
-				videoQueryResponse = getVideoUrl(generateTaskId);
-
-				if (videoQueryResponse != null && "done".equals(videoQueryResponse.getStatus())) {
-					log.info("Video generation completed, video_url: {}", videoQueryResponse.getVideoUrl());
-					response.setStatus("completed");
-					response.setVideoUrl(videoQueryResponse.getVideoUrl());
-					return response;
-				} else if (videoQueryResponse != null) {
-					log.info("Video generation status: {}", videoQueryResponse.getStatus());
-				}
-
-				retryCount++;
-			}
-
-			log.error("Video generation timeout or failed after {} retries", maxRetries);
-			response.setStatus("failed");
-			response.setError("Video generation timeout");
-			return response;
-		} catch (Exception e) {
-			log.error("Error in doGenerateVideo", e);
-			response.setStatus("failed");
-			response.setError(e.getMessage());
-			return response;
-		}
-	}
+            log.error("Video generation timeout or failed after {} retries", maxRetries);
+            response.setStatus("failed");
+            response.setError("Video generation timeout");
+            return response;
+        } catch (Exception e) {
+            log.error("Error in doGenerateVideo", e);
+            response.setStatus("failed");
+            response.setError(e.getMessage());
+            return response;
+        }
+    }
 }

@@ -58,3 +58,9 @@ digital-human:
     jimeng:
       base-url: https://api.jimeng.com
       api-key: your-jimeng-api-key
+
+# Comic Generation Config
+comic:
+  image:
+    base-path: /data/comic-images
+    base-url: http://localhost:8080/comic-images
