@@ -2,7 +2,10 @@ package com.aihoo.digital.service;
 
 import com.aihoo.digital.dto.*;
 import com.aihoo.digital.entity.DigitalHumanVideo;
-
+/**
+ * 
+ * 这里可以整理成模板方法
+ */
 public interface DigitalHumanVideoService {
 
     VideoGenerateResponse doGenerateVideo(VideoGenerateRequest request);
