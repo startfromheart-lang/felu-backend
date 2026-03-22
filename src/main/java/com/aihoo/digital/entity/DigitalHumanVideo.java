@@ -1,10 +1,8 @@
 package com.aihoo.digital.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import lombok.Data;
 import java.time.LocalDateTime;
 
-@Data
 @TableName("digital_human_video")
 public class DigitalHumanVideo {
 
@@ -65,4 +63,172 @@ public class DigitalHumanVideo {
 
     @TableLogic
     private Integer deleted;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public String getVideoName() {
+        return videoName;
+    }
+
+    public void setVideoName(String videoName) {
+        this.videoName = videoName;
+    }
+
+    public String getDigitalHumanName() {
+        return digitalHumanName;
+    }
+
+    public void setDigitalHumanName(String digitalHumanName) {
+        this.digitalHumanName = digitalHumanName;
+    }
+
+    public String getDigitalHumanCode() {
+        return digitalHumanCode;
+    }
+
+    public void setDigitalHumanCode(String digitalHumanCode) {
+        this.digitalHumanCode = digitalHumanCode;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getVoiceType() {
+        return voiceType;
+    }
+
+    public void setVoiceType(String voiceType) {
+        this.voiceType = voiceType;
+    }
+
+    public String getVoiceCode() {
+        return voiceCode;
+    }
+
+    public void setVoiceCode(String voiceCode) {
+        this.voiceCode = voiceCode;
+    }
+
+    public String getScript() {
+        return script;
+    }
+
+    public void setScript(String script) {
+        this.script = script;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getVideoUrl() {
+        return videoUrl;
+    }
+
+    public void setVideoUrl(String videoUrl) {
+        this.videoUrl = videoUrl;
+    }
+
+    public Integer getVideoDuration() {
+        return videoDuration;
+    }
+
+    public void setVideoDuration(Integer videoDuration) {
+        this.videoDuration = videoDuration;
+    }
+
+    public Long getVideoSize() {
+        return videoSize;
+    }
+
+    public void setVideoSize(Long videoSize) {
+        this.videoSize = videoSize;
+    }
+
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
+    }
+
+    public void setThumbnailUrl(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    public Integer getRetryCount() {
+        return retryCount;
+    }
+
+    public void setRetryCount(Integer retryCount) {
+        this.retryCount = retryCount;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
+
+    public String getProviderTaskId() {
+        return providerTaskId;
+    }
+
+    public void setProviderTaskId(String providerTaskId) {
+        this.providerTaskId = providerTaskId;
+    }
+
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public Integer getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Integer deleted) {
+        this.deleted = deleted;
+    }
 }

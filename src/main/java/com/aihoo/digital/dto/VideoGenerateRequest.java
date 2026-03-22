@@ -1,9 +1,7 @@
 package com.aihoo.digital.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
 
-@Data
 public class VideoGenerateRequest {
 
     @NotBlank(message = "数字人名称不能为空")
@@ -17,4 +15,36 @@ public class VideoGenerateRequest {
 
     @NotBlank(message = "台词内容不能为空")
     private String script;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getVoiceType() {
+        return voiceType;
+    }
+
+    public void setVoiceType(String voiceType) {
+        this.voiceType = voiceType;
+    }
+
+    public String getScript() {
+        return script;
+    }
+
+    public void setScript(String script) {
+        this.script = script;
+    }
 }

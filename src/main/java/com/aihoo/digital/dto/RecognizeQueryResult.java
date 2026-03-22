@@ -1,11 +1,8 @@
 package com.aihoo.digital.dto;
 
-import lombok.Data;
-
 /**
  * 识别查询结果内部类
  */
-@Data
 public class RecognizeQueryResult {
     /**
      * 任务状态
@@ -16,4 +13,20 @@ public class RecognizeQueryResult {
      * resp_data中的status
      */
     private Integer respDataStatus;
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Integer getRespDataStatus() {
+        return respDataStatus;
+    }
+
+    public void setRespDataStatus(Integer respDataStatus) {
+        this.respDataStatus = respDataStatus;
+    }
 }

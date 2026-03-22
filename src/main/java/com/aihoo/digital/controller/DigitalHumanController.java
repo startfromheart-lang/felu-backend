@@ -7,7 +7,6 @@ import com.aihoo.digital.service.DigitalHumanVideoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -17,10 +16,13 @@ import java.util.Map;
 @Tag(name = "数字人视频管理", description = "数字人视频生成、查询等接口")
 @RestController
 @RequestMapping("/digital-human")
-@RequiredArgsConstructor
 public class DigitalHumanController {
 
     private final DigitalHumanVideoService videoService;
+
+    public DigitalHumanController(DigitalHumanVideoService videoService) {
+        this.videoService = videoService;
+    }
 
     @Operation(summary = "生成数字人视频")
     @PostMapping("/generate")
